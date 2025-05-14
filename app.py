@@ -1,7 +1,9 @@
 from flask import Flask, request, send_file, jsonify
-import threading
+from flask_cors import CORS  # if you’re using flask_cors
+
 
 app = Flask(__name__)
+CORS(app)  # ← This line
 
 # Global state: "idle" or "activate"
 state = {"action": "idle"}
