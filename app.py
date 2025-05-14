@@ -1,17 +1,31 @@
-from flask import Flask, request
-import datetime
+from flask import Flask, request, send_file, jsonify
+import threading
 
 app = Flask(__name__)
 
+# Global state: "idle" or "activate"
+state = {"action": "idle"}
+
 @app.route('/')
-def home():
-    return 'Arduino Control Server is live!'
+def index():
+    return send_file('index.html')
 
 @app.route('/trigger', methods=['POST'])
 def trigger():
-    print(f"[{datetime.datetime.now()}] Button pressed!")
-    # Placeholder: This is where you'd forward the command to Arduino
-    return {'status': 'ok', 'message': 'Command received'}
+    # When the button is pressed, set action to activate
+    state["action"] = "activate"
+    return jsonify(status="ok", action=state["action"])
+
+@app.route('/status', methods=['GET'])
+def status():
+    # Return current action
+    return jsonify(action=state["action"])
+
+@app.route('/reset', methods=['POST'])
+def reset():
+    # Arduino calls this after it’s run to clear the flag
+    state["action"] = "idle"
+    return jsonify(status="ok", action=state["action"])
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
