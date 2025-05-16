@@ -1,33 +1,29 @@
-from flask import Flask, request, send_file, jsonify
-from flask_cors import CORS  # if you’re using flask_cors
-
+from flask import Flask, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
-CORS(app)  # ← This line
+CORS(app)  # Allow requests from your Arduino
 
-# Global state: "idle" or "activate"
-state = {"action": "idle"}
+# Initial state
+state = {"status": "idle"}
 
-@app.route('/')
-def index():
-    return send_file('index.html')
+@app.route("/")
+def home():
+    return jsonify({"message": "Backend online", "current_status": state["status"]})
 
-@app.route('/trigger', methods=['POST'])
-def trigger():
-    # When the button is pressed, set action to activate
-    state["action"] = "activate"
-    return jsonify(status="ok", action=state["action"])
-
-@app.route('/status', methods=['GET'])
+@app.route("/status", methods=["GET"])
 def status():
-    # Return current action
-    return jsonify(action=state["action"])
+    return jsonify({"status": state["status"]})
 
-@app.route('/reset', methods=['POST'])
+@app.route("/activate", methods=["GET"])
+def activate():
+    state["status"] = "activate"
+    return jsonify({"message": "Status set to activate"})
+
+@app.route("/reset", methods=["GET"])
 def reset():
-    # Arduino calls this after it’s run to clear the flag
-    state["action"] = "idle"
-    return jsonify(status="ok", action=state["action"])
+    state["status"] = "idle"
+    return jsonify({"message": "Status reset to idle"})
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+if __name__ == "__main__":
+    app.run(debug=True)
